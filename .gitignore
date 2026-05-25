@@ -1,49 +1,40 @@
-# Operating system-specific files
+# OS
 .DS_Store
-
-# Temporary files
 *~
 ~*
 .swp
 
-# Editor configuration files
+# Editor
 .idea/
 .vscode/
 
-# Python-specific files
-__pycache__/
+# Node / pnpm
+node_modules/
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.tsbuildinfo
+.npm
 
 # Build artifacts
 build/
 dist/
+.svelte-kit/
+
+# Environment
+.env
+.env.*
+
+# PII + plaintext conversation data — must never be committed
+/participants.toml
+workdir/
+out/
+*.jsonl
+*.db
+*.db-wal
+*.db-shm
 
 # Logs
 *.log
-*.tsbuildinfo
-.pnpm-debug.log*
-logs
-node_modules/
-npm-debug.log
-npm-debug.log*
-package-lock.json
-yarn-debug.log*
-yarn-error.log*
-
-# Environment variables
-.env
-.env.development.local
-.env.local
-.env.production.local
-.env.test.local
-.env/
-
-# SvelteKit
-.svelte-kit
-
-# Virtual environments
-venv/
-
-# npm
-.npm
-
-data/
+logs/

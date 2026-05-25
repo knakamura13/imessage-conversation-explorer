@@ -1,0 +1,14 @@
+[me]
+legal_name = "Kyle Nakamura"
+display_name = "Kyle"
+phone_numbers = ["+15551112222"]
+emails = []
+
+[spouse]
+legal_name = "Junghyun Kim"
+display_name = "Sally"
+phone_numbers = ["+15553334444"]
+emails = ["spouse@example.com"]
+
+[timezone]
+iana = "America/Los_Angeles"

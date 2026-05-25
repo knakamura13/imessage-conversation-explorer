@@ -1,0 +1,17 @@
+# Copy this file to `participants.toml` and fill in real values.
+# `participants.toml` is gitignored — it carries PII and must never be committed.
+
+[me]
+legal_name = "Kyle Nakamura"
+display_name = "Kyle"
+phone_numbers = ["+15555555555"]
+emails = []
+
+[spouse]
+legal_name = "Junghyun Kim"
+display_name = "Sally"
+phone_numbers = ["+15555555556"]
+emails = ["spouse@example.com"]
+
+[timezone]
+iana = "America/Los_Angeles"
