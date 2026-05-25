@@ -289,10 +289,12 @@
     font-size: 12px;
   }
 
-  /* Tag-chip strip: hidden by default; revealed on hover/focus/selected. */
+  /* Tag-chip strip: hidden by default; revealed on hover/focus/selected.
+     Allowed to fill the full column so all 8 chips fit on one row at any
+     reasonable viewport — wrapping with a single trailing chip looks bad. */
   .chip-strip {
     display: none;
-    max-width: min(560px, 75%);
+    width: 100%;
   }
   .msg:hover .chip-strip,
   .msg.focused .chip-strip {
