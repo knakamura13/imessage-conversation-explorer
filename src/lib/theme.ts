@@ -3,7 +3,7 @@
 
 export type ThemeMode = 'auto' | 'light' | 'dark';
 
-const KEY = 'imxport.theme';
+const KEY = 'imessage-explorer.theme';
 
 export function readSavedTheme(): ThemeMode {
   if (typeof localStorage === 'undefined') return 'auto';

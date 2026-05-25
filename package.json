@@ -1,5 +1,5 @@
 {
-  "name": "imessage-uscis-exporter-sveltekit",
+  "name": "imessage-conversation-explorer",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -14,7 +14,7 @@
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "test": "vitest run",
     "test:watch": "vitest",
-    "imxport": "tsx bin/imxport.ts",
+    "imessage-explorer": "tsx bin/imessage-explorer.ts",
     "lint": "prettier --check . && eslint .",
     "format": "prettier --write ."
   },

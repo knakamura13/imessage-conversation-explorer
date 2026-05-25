@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-export function mkTmpDir(prefix = 'imxport-test-'): string {
+export function mkTmpDir(prefix = 'imessage-explorer-test-'): string {
   return mkdtempSync(join(tmpdir(), prefix));
 }
 

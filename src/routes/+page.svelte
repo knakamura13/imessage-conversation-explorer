@@ -325,7 +325,7 @@
 
 <div class="app">
   <header>
-    <div class="title">imxport tagger</div>
+    <div class="title">iMessage Conversation Explorer</div>
     <div class="search">
       <input
         type="search"

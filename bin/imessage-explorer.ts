@@ -12,8 +12,8 @@ import { existsSync } from 'node:fs';
 
 const program = new Command();
 program
-  .name('imxport')
-  .description('Export the iMessage conversation between two people for USCIS evidence.')
+  .name('imessage-explorer')
+  .description('Search and tag your iMessage conversation with one person, locally and offline.')
   .version(TOOL_VERSION);
 
 program
@@ -102,7 +102,7 @@ program
   .option('--host <host>', 'bind host', '127.0.0.1')
   .option('--port <port>', 'bind port', '5555')
   .action((opts) => {
-    const env = { ...process.env, IMXPORT_WORKDIR: opts.workdir };
+    const env = { ...process.env, IMESSAGE_EXPLORER_WORKDIR: opts.workdir };
     const args = ['exec', 'vite', '--host', opts.host, '--port', String(opts.port)];
     process.stdout.write(`starting tagger on http://${opts.host}:${opts.port}\n`);
     process.stdout.write(`workdir: ${opts.workdir}\n`);

@@ -1,4 +1,4 @@
-# imessage-uscis-exporter-sveltekit
+# iMessage Conversation Explorer
 
 Local, offline macOS tool for searching and tagging your iMessage history with a
 specific person — extracted from `~/Library/Messages/chat.db` and served as a
@@ -23,11 +23,11 @@ cp participants.toml.example participants.toml
 ## CLI
 
 ```sh
-pnpm imxport inspect    # read-only dry-run: confirm participants.toml matches the DB
-pnpm imxport setup      # copy + hash chat.db into workdir/snapshot/
-pnpm imxport extract    # build messages.jsonl + copy attachments
-pnpm imxport enrich     # classify + thread reactions → enriched.jsonl + stats.json
-pnpm imxport tag        # launch the tagger UI on http://127.0.0.1:5555
+pnpm imessage-explorer inspect    # read-only dry-run: confirm participants.toml matches the DB
+pnpm imessage-explorer setup      # copy + hash chat.db into workdir/snapshot/
+pnpm imessage-explorer extract    # build messages.jsonl + copy attachments
+pnpm imessage-explorer enrich     # classify + thread reactions → enriched.jsonl + stats.json
+pnpm imessage-explorer tag        # launch the tagger UI on http://127.0.0.1:5555
 ```
 
 Defaults: `--source-db ~/Library/Messages/chat.db`, `--workdir workdir`,

@@ -20,7 +20,7 @@ export const load: PageServerLoad = async (): Promise<InitialPayload> => {
   if (!existsSync(l.enrichedJsonl)) {
     return {
       ready: false,
-      reason: `workdir/enriched.jsonl not found at ${l.enrichedJsonl}. Run \`pnpm imxport enrich\` first.`,
+      reason: `workdir/enriched.jsonl not found at ${l.enrichedJsonl}. Run \`pnpm imessage-explorer enrich\` first.`,
       workdir: l.workdir,
       stats: null,
       tag_schema: DEFAULT_TAG_SCHEMA,
