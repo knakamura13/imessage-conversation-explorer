@@ -95,10 +95,27 @@ program
     });
   });
 
-for (const stub of ['tag', 'select', 'render', 'verify', 'all'] as const) {
+program
+  .command('tag')
+  .description('Stage 3: launch the SvelteKit tagger UI on 127.0.0.1:<port>.')
+  .option('--workdir <path>', 'work directory', DEFAULT_WORKDIR)
+  .option('--host <host>', 'bind host', '127.0.0.1')
+  .option('--port <port>', 'bind port', '5555')
+  .action((opts) => {
+    const env = { ...process.env, IMXPORT_WORKDIR: opts.workdir };
+    const args = ['exec', 'vite', '--host', opts.host, '--port', String(opts.port)];
+    process.stdout.write(`starting tagger on http://${opts.host}:${opts.port}\n`);
+    process.stdout.write(`workdir: ${opts.workdir}\n`);
+    // spawn pnpm exec vite; inherit stdio so the user sees vite's log
+    const { spawn } = require('node:child_process') as typeof import('node:child_process');
+    const child = spawn('pnpm', args, { env, stdio: 'inherit' });
+    child.on('exit', (code: number | null) => process.exit(code ?? 0));
+  });
+
+for (const stub of ['select', 'render', 'verify', 'all'] as const) {
   program
     .command(stub)
-    .description(`(not yet implemented — Phase ${stub === 'tag' ? '2' : '3'})`)
+    .description('(not yet implemented — Phase 3)')
     .action(() => {
       process.stderr.write(`imxport ${stub}: not yet implemented\n`);
       process.exit(1);
