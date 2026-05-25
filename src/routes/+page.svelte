@@ -192,6 +192,20 @@
     scroller.scrollTo({ top: offset, behavior: 'smooth' });
   }
 
+  function scrollToBottom(): void {
+    if (!scroller) return;
+    // Force-finish the chunked render so scrollHeight reflects the full list,
+    // then wait two rAFs: one for Svelte to flush the reactive update, one for
+    // layout to settle. Instant scroll (auto) so lazy images can't push the
+    // bottom further down mid-animation.
+    if (renderedCount < messages.length) renderedCount = messages.length;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (scroller) scroller.scrollTop = scroller.scrollHeight;
+      });
+    });
+  }
+
   // ---- keyboard ------------------------------------------------------------
 
   function onKey(e: KeyboardEvent): void {
@@ -344,6 +358,7 @@
         {filter}
         {sender}
         onJump={(m) => scrollToMonth(m)}
+        onJumpToToday={scrollToBottom}
         onFilter={setFilter}
         onSender={setSender}
       />

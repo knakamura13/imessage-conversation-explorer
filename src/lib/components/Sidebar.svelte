@@ -6,6 +6,7 @@
     filter,
     sender,
     onJump,
+    onJumpToToday,
     onFilter,
     onSender
   }: {
@@ -15,6 +16,7 @@
     filter: string;
     sender: string;
     onJump: (month: string) => void;
+    onJumpToToday: () => void;
     onFilter: (filter: string) => void;
     onSender: (sender: string) => void;
   } = $props();
@@ -88,6 +90,11 @@
           </button>
         </li>
       {/each}
+      <li>
+        <button class="today" onclick={onJumpToToday}>
+          <span>Today</span>
+        </button>
+      </li>
     </ol>
   </section>
 </aside>
