@@ -282,6 +282,9 @@
     margin-top: 3px;
     align-items: center;
   }
+  .from-me .applied {
+    justify-content: flex-end;
+  }
   .note-indicator {
     font-size: 12px;
   }
@@ -294,5 +297,9 @@
   .msg:hover .chip-strip,
   .msg.focused .chip-strip {
     display: block;
+  }
+  /* Right-align the chip strip's contents under from-me bubbles. */
+  .from-me .chip-strip :global(.strip) {
+    justify-content: flex-end;
   }
 </style>
