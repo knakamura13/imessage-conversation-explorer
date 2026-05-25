@@ -43,7 +43,7 @@
       {#each FILTER_CHIPS as f (f.value)}
         <button
           class="chip"
-          class:on={filter === f.value || (f.value === '' && !filter.startsWith('tag:'))}
+          class:on={filter === f.value}
           onclick={() => onFilter(f.value)}
         >
           {f.label}
