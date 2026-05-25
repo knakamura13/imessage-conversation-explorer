@@ -4,13 +4,12 @@
   const SHORTCUTS: Array<{ keys: string; what: string }> = [
     { keys: 'j / ↓', what: 'next message' },
     { keys: 'k / ↑', what: 'previous message' },
-    { keys: 'space', what: 'toggle selection on focused' },
-    { keys: '1 – 8', what: 'apply tag #N to selection (or focused)' },
-    { keys: 'n', what: 'open note editor' },
+    { keys: '1 – 8', what: 'apply tag #N to focused message' },
+    { keys: 'n', what: 'open note editor on focused message' },
     { keys: '/', what: 'focus search' },
     { keys: 'g', what: 'jump to YYYY-MM' },
     { keys: '?', what: 'help' },
-    { keys: 'esc', what: 'clear selection / close overlay' }
+    { keys: 'esc', what: 'close overlay' }
   ];
 </script>
 

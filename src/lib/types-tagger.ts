@@ -14,9 +14,3 @@ export interface MessagesPayload {
   tag_schema: readonly string[];
   messages: TaggedRow[];
 }
-
-export interface Suggestion {
-  rowid: number;
-  guid: string;
-  reasons: string[];
-}

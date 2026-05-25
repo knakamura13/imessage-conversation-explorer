@@ -1,25 +1,23 @@
 # Pipeline
 
-Each stage reads the previous stage's artifacts from `workdir/` and writes its own.
-Each is independently re-runnable. All artifacts after stage 0 are downstream of
-the snapshot SHA-256 in `provenance.json` so provenance is traceable.
+Three offline stages produce a searchable, taggable timeline. Each stage reads
+the previous stage's artifacts from `workdir/` and writes its own; all are
+independently re-runnable.
 
 ```
 chat.db ─▶ Stage 0 setup    ─▶ snapshot/ + provenance.json
         ─▶ Stage 1 extract  ─▶ messages.jsonl + attachments/
         ─▶ Stage 2 enrich   ─▶ enriched.jsonl + stats.json
-        ─▶ Stage 3 tag      ─▶ tags.json                (Phase 2)
-        ─▶ Stage 4 select   ─▶ selected.jsonl + selection_manifest.json   (Phase 3)
-        ─▶ Stage 5 render   ─▶ out/exhibit.pdf, out/appendix.pdf, out/archive/  (Phase 3)
-        ─▶ Stage 6 verify   ─▶ out/manifest.json + out/README-for-attorney.md   (Phase 3)
+        ─▶ Stage 3 tag      ─▶ tags.json   (tagger UI, human in the loop)
 ```
 
 ## Stage 0 — setup
 
 - Copy `chat.db` (+ `chat.db-wal`, `chat.db-shm` if present) into `workdir/snapshot/`.
 - SHA-256 each file (streaming).
-- Open snapshot DB, count rows in `message`, `handle`, `chat` (sanity).
-- Write `workdir/provenance.json`.
+- Open snapshot DB, count rows in `message`, `handle`, `chat` (sanity check).
+- Write `workdir/provenance.json` with the source path, hashes, counts,
+  tool version, and snapshot timestamp.
 
 ## Stage 1 — extract
 
@@ -47,23 +45,15 @@ Output: one JSON object per line in `workdir/messages.jsonl`.
   `associated_message_guid` (formats: `p:0/<guid>`, `bp:<guid>`, bare `<guid>`).
 - Pass 2: emit enriched rows (skipping reactions). Classify each row as
   `text` / `image` / `video` / `audio` / `reaction` / `reply` / `attachment` /
-  `unknown`. Replies carry `reply_to_guid`. Edits flagged via `has_edit`.
+  `unknown`. Replies carry `reply_to_guid`.
 - Concurrently accumulate `stats.json`: `total_visible`, `by_sender`,
   `by_month` (YYYY-MM UTC), `by_type`, `attachment_count`, `first_date`,
   `last_date`, `longest_gap_days`.
 
-## Phase 2 — tagger UI (Stage 3)
+## Stage 3 — tagger UI
 
-SvelteKit routes + endpoints. Server caches parsed `enriched.jsonl` + `tags.json`
-keyed by `(path, mtime, size)`. ETag honors `If-None-Match` for the messages
-endpoint. UI is a chat-bubble layout with sticky month headers, chunked
-rendering (first 400 immediately, rest in 1500-msg `requestAnimationFrame`
-batches with a cancel token), and the `position: static` reflow trick for
-scroll-to-month. **Do not** use `content-visibility: auto` on message rows.
+SvelteKit dev server on `127.0.0.1:5555`. Reads `enriched.jsonl` + `tags.json`
+from the same workdir; caches parsed data in-process keyed on `(mtime, size)`.
 
-## Phase 3 — select / render / verify (Stages 4–6)
-
-Pure-TS selection (tagged + context + monthly slice + dedupe + cap). Render via
-Svelte SSR → HTML string → Playwright Chromium `page.pdf`. Verify re-hashes the
-snapshot, checks monotonic dates / duplicate guids / attachment presence, and
-writes `manifest.json` + the attorney README.
+The tagger writes tags + notes to `workdir/tags.json` atomically (tmpfile +
+rename). That's the only artifact stage 3 produces.

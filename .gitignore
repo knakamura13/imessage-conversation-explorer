@@ -29,7 +29,6 @@ dist/
 # PII + plaintext conversation data — must never be committed
 /participants.toml
 workdir/
-out/
 *.jsonl
 *.db
 *.db-wal

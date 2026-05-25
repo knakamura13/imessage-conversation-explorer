@@ -5,9 +5,8 @@
   import Sidebar from '$lib/components/Sidebar.svelte';
   import KeyboardOverlay from '$lib/components/KeyboardOverlay.svelte';
   import NoteEditor from '$lib/components/NoteEditor.svelte';
-  import SuggestDialog from '$lib/components/SuggestDialog.svelte';
   import { applyTheme, nextTheme, readSavedTheme, saveTheme, type ThemeMode } from '$lib/theme.js';
-  import type { MessagesPayload, Suggestion, TaggedRow } from '$lib/types-tagger.js';
+  import type { MessagesPayload, TaggedRow } from '$lib/types-tagger.js';
   import type { PageData } from './$types.js';
 
   let { data }: { data: PageData } = $props();
@@ -26,7 +25,6 @@
   let sender = $state('');
 
   let focusedRowid = $state<number | null>(null);
-  let selection = $state<Set<number>>(new Set());
   let helpOpen = $state(false);
   let theme = $state<ThemeMode>('auto');
 
@@ -35,10 +33,6 @@
   let noteInitial = $state('');
   let noteSender = $state('');
   let notePreview = $state('');
-
-  let suggestOpen = $state(false);
-  let suggestLoading = $state(false);
-  let suggestList = $state<Suggestion[]>([]);
 
   // ---- derived -------------------------------------------------------------
 
@@ -122,13 +116,6 @@
   function focusRow(rowid: number): void {
     focusedRowid = rowid;
   }
-  function toggleSelect(rowid: number, _e: MouseEvent | KeyboardEvent): void {
-    const next = new Set(selection);
-    if (next.has(rowid)) next.delete(rowid);
-    else next.add(rowid);
-    selection = next;
-    focusedRowid = rowid;
-  }
 
   function toggleTag(rowid: number, tag: string): void {
     const row = messages.find((r) => r.rowid === rowid);
@@ -175,42 +162,6 @@
     noteOpen = false;
   }
 
-  async function openSuggest(): Promise<void> {
-    suggestOpen = true;
-    suggestLoading = true;
-    suggestList = [];
-    try {
-      const res = await fetch('/api/suggest?cap=300');
-      const data = (await res.json()) as { suggestions: Suggestion[] };
-      suggestList = data.suggestions ?? [];
-    } catch (err) {
-      console.error('suggest failed:', err);
-    } finally {
-      suggestLoading = false;
-    }
-  }
-
-  function applySuggestTag(rowids: number[], tag: string): void {
-    const updates: Record<string, { tags: string[]; note: string }> = {};
-    const idsSet = new Set(rowids);
-    let touched = false;
-    for (const row of messages) {
-      if (!idsSet.has(row.rowid)) continue;
-      const set = new Set(row.tags);
-      if (set.has(tag)) continue;
-      set.add(tag);
-      const updated = Array.from(set).sort();
-      row.tags = updated;
-      updates[String(row.rowid)] = { tags: updated, note: row.note };
-      touched = true;
-    }
-    if (touched) {
-      messages = [...messages];
-      void persistTags(updates);
-    }
-    suggestOpen = false;
-  }
-
   // ---- scroll-to-month (sticky-aware) -------------------------------------
 
   let scroller = $state<HTMLElement | null>(null);
@@ -255,7 +206,6 @@
     }
     if (e.key === 'Escape') {
       if (helpOpen) helpOpen = false;
-      else if (selection.size > 0) selection = new Set();
       return;
     }
     if (inEditable) return;
@@ -281,17 +231,11 @@
       e.preventDefault();
       return;
     }
-    if (e.key === ' ' && focusedRowid != null) {
-      toggleSelect(focusedRowid, e);
-      e.preventDefault();
-      return;
-    }
     if (/^[1-8]$/.test(e.key)) {
       const idx = Number(e.key) - 1;
       const t = data.tag_schema[idx];
-      if (!t) return;
-      const targets = selection.size > 0 ? Array.from(selection) : focusedRowid != null ? [focusedRowid] : [];
-      for (const rowid of targets) toggleTag(rowid, t);
+      if (!t || focusedRowid == null) return;
+      toggleTag(focusedRowid, t);
       e.preventDefault();
       return;
     }
@@ -381,8 +325,6 @@
     </div>
     <div class="pills">
       <span class="pill">{taggedCount} / {totalForFilter} tagged</span>
-      <span class="pill">{renderedCount} / {messages.length} rendered</span>
-      <button class="theme" onclick={openSuggest} title="auto-suggest candidates">✨</button>
       <button class="theme" onclick={cycleTheme} title={`theme: ${theme}`}>{themeGlyph(theme)}</button>
       <button class="theme" onclick={() => (helpOpen = true)} title="help (?)">?</button>
     </div>
@@ -422,9 +364,7 @@
                 parentBody={item.row.reply_to_guid ? byGuid.get(item.row.reply_to_guid)?.body ?? null : null}
                 schema={data.tag_schema}
                 focused={focusedRowid === item.row.rowid}
-                selected={selection.has(item.row.rowid)}
                 onToggleTag={toggleTag}
-                onSelect={toggleSelect}
                 onFocus={focusRow}
               />
             {/if}
@@ -435,8 +375,7 @@
   {/if}
 
   <footer>
-    <span>{selection.size} selected</span>
-    <span class="hint">j/k navigate · space select · 1–8 tag · ? help</span>
+    <span class="hint">j/k navigate · 1–8 tag · n note · / search · g jump · ? help</span>
   </footer>
 </div>
 
@@ -450,15 +389,6 @@
   initial={noteInitial}
   onSave={saveNote}
   onClose={() => (noteOpen = false)}
-/>
-
-<SuggestDialog
-  open={suggestOpen}
-  loading={suggestLoading}
-  suggestions={suggestList}
-  schema={data.tag_schema}
-  onApply={applySuggestTag}
-  onClose={() => (suggestOpen = false)}
 />
 
 <style>

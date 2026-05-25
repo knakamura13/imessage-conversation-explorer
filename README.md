@@ -1,16 +1,10 @@
 # imessage-uscis-exporter-sveltekit
 
-Local, offline macOS tool that exports the iMessage conversation between two people
-from `~/Library/Messages/chat.db` and produces USCIS-suitable PDF exhibits plus a
-browsable HTML archive.
+Local, offline macOS tool for searching and tagging your iMessage history with a
+specific person — extracted from `~/Library/Messages/chat.db` and served as a
+chat-bubble timeline you can search, filter, jump through by month, and tag.
 
-SvelteKit + TypeScript rewrite of the original Python `imessage-uscis-exporter`.
-
-## Status
-
-Phase 1 only: scaffolding, stages 0–2 (snapshot → extract → enrich), CLI, and the
-test fixture. The tagger UI (Phase 2) and the render pipeline (Phase 3) are not
-yet implemented.
+SvelteKit + TypeScript. No network calls; everything runs locally.
 
 ## Requirements
 
@@ -29,17 +23,27 @@ cp participants.toml.example participants.toml
 ## CLI
 
 ```sh
-pnpm imxport inspect            # read-only dry-run
-pnpm imxport setup              # copy + hash chat.db into workdir/snapshot/
-pnpm imxport extract            # build messages.jsonl + workdir/attachments/
-pnpm imxport enrich             # classify + thread reactions → enriched.jsonl + stats.json
-pnpm imxport tag                # (Phase 2) tagger UI
-pnpm imxport select             # (Phase 3)
-pnpm imxport render             # (Phase 3)
-pnpm imxport verify             # (Phase 3)
+pnpm imxport inspect    # read-only dry-run: confirm participants.toml matches the DB
+pnpm imxport setup      # copy + hash chat.db into workdir/snapshot/
+pnpm imxport extract    # build messages.jsonl + copy attachments
+pnpm imxport enrich     # classify + thread reactions → enriched.jsonl + stats.json
+pnpm imxport tag        # launch the tagger UI on http://127.0.0.1:5555
 ```
 
-Defaults: `--source-db ~/Library/Messages/chat.db`, `--workdir workdir`, `--config participants.toml`.
+Defaults: `--source-db ~/Library/Messages/chat.db`, `--workdir workdir`,
+`--config participants.toml`.
+
+## Tagger UI
+
+- Chat-bubble timeline with sticky month headers and a jump-to-month sidebar.
+- Search bar (substring or regex) — server-side filter, then chunked rendering.
+- Filter chips: untagged / tagged / has-attachment / has-link / by-tag / by-sender.
+- 8-tag schema (`milestone`, `daily_life`, `family`, `planning`, `finances`,
+  `travel`, `affection`, `conflict_resolution`) plus per-message free-form notes.
+- Keyboard: `j`/`k` navigate, `1`–`8` tag the focused message, `n` open note
+  editor, `/` focus search, `g` jump to YYYY-MM, `?` help, `esc` close overlay.
+- Tags + notes persist to `workdir/tags.json` (atomic write).
+- Theme follows `prefers-color-scheme`; the header button cycles auto/light/dark.
 
 ## Tests
 
@@ -47,11 +51,11 @@ Defaults: `--source-db ~/Library/Messages/chat.db`, `--workdir workdir`, `--conf
 pnpm test
 ```
 
-Tests run against an in-memory / tmp-dir synthetic chat.db built in
-`tests/fixtures/synthetic-chat-db.ts`.
+Tests run against a synthetic chat.db built in
+[tests/fixtures/synthetic-chat-db.ts](tests/fixtures/synthetic-chat-db.ts).
 
 ## Privacy
 
 - `participants.toml` is gitignored — it carries real phone numbers and emails.
-- `workdir/`, `out/`, `*.jsonl`, and `*.db*` are gitignored — they contain every
+- `workdir/`, `*.jsonl`, and `*.db*` are gitignored — they contain every
   message in plaintext.

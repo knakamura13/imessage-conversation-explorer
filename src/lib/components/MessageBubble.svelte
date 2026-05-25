@@ -8,18 +8,14 @@
     parentBody,
     schema,
     focused,
-    selected,
     onToggleTag,
-    onSelect,
     onFocus
   }: {
     row: TaggedRow;
     parentBody: string | null;
     schema: readonly string[];
     focused: boolean;
-    selected: boolean;
     onToggleTag: (rowid: number, tag: string) => void;
-    onSelect: (rowid: number, e: MouseEvent | KeyboardEvent) => void;
     onFocus: (rowid: number) => void;
   } = $props();
 
@@ -62,19 +58,16 @@
   }
 </script>
 
-<!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <div
   class="msg"
   class:from-me={row.is_from_me}
   class:from-other={!row.is_from_me}
   class:focused
-  class:selected
   data-rowid={row.rowid}
   data-guid={row.guid}
   role="listitem"
   tabindex="-1"
-  onclick={(e) => onSelect(row.rowid, e)}
   onmouseenter={() => onFocus(row.rowid)}
 >
   <div class="meta">
@@ -166,9 +159,6 @@
   }
   .msg.focused {
     background: color-mix(in srgb, var(--accent, #3b82f6) 12%, transparent);
-  }
-  .msg.selected {
-    background: color-mix(in srgb, var(--accent, #3b82f6) 24%, transparent);
   }
 
   .meta {
@@ -302,8 +292,7 @@
     max-width: min(560px, 75%);
   }
   .msg:hover .chip-strip,
-  .msg.focused .chip-strip,
-  .msg.selected .chip-strip {
+  .msg.focused .chip-strip {
     display: block;
   }
 </style>

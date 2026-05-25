@@ -112,16 +112,6 @@ program
     child.on('exit', (code: number | null) => process.exit(code ?? 0));
   });
 
-for (const stub of ['select', 'render', 'verify', 'all'] as const) {
-  program
-    .command(stub)
-    .description('(not yet implemented — Phase 3)')
-    .action(() => {
-      process.stderr.write(`imxport ${stub}: not yet implemented\n`);
-      process.exit(1);
-    });
-}
-
 async function wrap(fn: () => Promise<void>): Promise<void> {
   try {
     await fn();
