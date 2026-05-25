@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { flushSync, onMount } from 'svelte';
   import MessageBubble from '$lib/components/MessageBubble.svelte';
   import MonthDivider from '$lib/components/MonthDivider.svelte';
   import Sidebar from '$lib/components/Sidebar.svelte';
@@ -194,16 +194,23 @@
 
   function scrollToBottom(): void {
     if (!scroller) return;
-    // Force-finish the chunked render so scrollHeight reflects the full list,
-    // then wait two rAFs: one for Svelte to flush the reactive update, one for
-    // layout to settle. Instant scroll (auto) so lazy images can't push the
-    // bottom further down mid-animation.
-    if (renderedCount < messages.length) renderedCount = messages.length;
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (scroller) scroller.scrollTop = scroller.scrollHeight;
-      });
-    });
+    // Force the chunked render to finish so scrollHeight reflects the full
+    // list, then flushSync so Svelte commits the 11k DOM nodes synchronously
+    // (otherwise the rAF below races against an in-flight reactive update).
+    if (renderedCount < messages.length) {
+      renderedCount = messages.length;
+      flushSync();
+    }
+    // Re-issue scrollTop a few times: the first lands the common case, the
+    // later ones catch late layout settling (lazy images near the bottom
+    // committing their final size, sub-pixel rounding, etc.). scrollTop =
+    // scrollHeight is idempotent, so repeated calls don't cause jitter.
+    const finish = () => {
+      if (scroller) scroller.scrollTop = scroller.scrollHeight;
+    };
+    requestAnimationFrame(finish);
+    setTimeout(finish, 100);
+    setTimeout(finish, 400);
   }
 
   // ---- keyboard ------------------------------------------------------------
