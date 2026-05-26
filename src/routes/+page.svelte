@@ -1,11 +1,14 @@
 <script lang="ts">
   import { flushSync, onMount } from 'svelte';
+  import { slide } from 'svelte/transition';
   import MessageBubble from '$lib/components/MessageBubble.svelte';
   import MonthDivider from '$lib/components/MonthDivider.svelte';
   import Sidebar from '$lib/components/Sidebar.svelte';
+  import MonthlyChart from '$lib/components/MonthlyChart.svelte';
   import KeyboardOverlay from '$lib/components/KeyboardOverlay.svelte';
   import NoteEditor from '$lib/components/NoteEditor.svelte';
   import { applyTheme, nextTheme, readSavedTheme, saveTheme, type ThemeMode } from '$lib/theme.js';
+  import { buildMonthSeries } from '$lib/month-series.js';
   import type { MessagesPayload, TaggedRow } from '$lib/types-tagger.js';
   import type { PageData } from './$types.js';
 
@@ -27,6 +30,7 @@
   let focusedRowid = $state<number | null>(null);
   let helpOpen = $state(false);
   let theme = $state<ThemeMode>('auto');
+  let chartOpen = $state(true);
 
   let noteOpen = $state(false);
   let noteRowid = $state<number | null>(null);
@@ -42,17 +46,11 @@
     return m;
   });
 
-  const monthCounts = $derived.by(() => {
-    const counts = new Map<string, number>();
-    for (const r of messages) {
-      if (!r.date_utc) continue;
-      const key = r.date_utc.slice(0, 7);
-      counts.set(key, (counts.get(key) ?? 0) + 1);
-    }
-    return Array.from(counts.entries())
-      .sort(([a], [b]) => (a < b ? -1 : 1))
-      .map(([month, count]) => ({ month, count }));
-  });
+  const monthSeries = $derived.by(() => buildMonthSeries(messages));
+  // Sidebar contract preserved: only months with ≥1 message in the Jump-to list.
+  const monthCounts = $derived(
+    monthSeries.filter((m) => m.total > 0).map((m) => ({ month: m.month, count: m.total }))
+  );
 
   const taggedCount = $derived(messages.reduce((n, r) => n + (r.tags.length > 0 || r.note ? 1 : 0), 0));
 
@@ -281,10 +279,21 @@
   onMount(() => {
     theme = readSavedTheme();
     applyTheme(theme);
+    const savedChart = localStorage.getItem('imc:chartOpen');
+    if (savedChart === '0') chartOpen = false;
     if (data.ready) void fetchMessages();
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   });
+
+  function toggleChart(): void {
+    chartOpen = !chartOpen;
+    try {
+      localStorage.setItem('imc:chartOpen', chartOpen ? '1' : '0');
+    } catch {
+      // localStorage can throw in private modes; ignore.
+    }
+  }
 
   function cycleTheme(): void {
     theme = nextTheme(theme);
@@ -357,6 +366,17 @@
       <p>{data.reason}</p>
     </div>
   {:else}
+    <section class="chart-strip" class:open={chartOpen}>
+      <button class="chart-toggle" onclick={toggleChart} aria-expanded={chartOpen}>
+        <span class="chevron">{chartOpen ? '▾' : '▸'}</span>
+        <span>Messages per month</span>
+      </button>
+      {#if chartOpen}
+        <div class="chart-host" transition:slide={{ duration: 150 }}>
+          <MonthlyChart series={monthSeries} senders={data.senders} onJump={scrollToMonth} />
+        </div>
+      {/if}
+    </section>
     <div class="layout">
       <Sidebar
         monthCounts={monthCounts}
@@ -516,6 +536,40 @@
     border-radius: 6px;
     cursor: pointer;
     font-size: 14px;
+  }
+
+  .chart-strip {
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+  }
+  .chart-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 8px 16px;
+    cursor: pointer;
+    text-align: left;
+  }
+  .chart-toggle:hover {
+    color: var(--text);
+  }
+  .chevron {
+    font-size: 10px;
+    width: 10px;
+    display: inline-block;
+  }
+  .chart-host {
+    height: 100px;
+    padding: 0 16px 8px;
   }
 
   .layout {
