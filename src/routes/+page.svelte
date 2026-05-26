@@ -366,9 +366,9 @@
       <p>{data.reason}</p>
     </div>
   {:else}
-    <section class="chart-strip" class:open={chartOpen}>
+    <section class="chart-strip">
       <button class="chart-toggle" onclick={toggleChart} aria-expanded={chartOpen}>
-        <span class="chevron">{chartOpen ? '▾' : '▸'}</span>
+        <span class="chevron" aria-hidden="true">{chartOpen ? '▾' : '▸'}</span>
         <span>Messages per month</span>
       </button>
       {#if chartOpen}
