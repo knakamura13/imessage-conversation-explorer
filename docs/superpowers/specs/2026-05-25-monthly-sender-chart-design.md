@@ -76,22 +76,22 @@ export type MonthSeries = MonthBucket[];  // sorted ascending by month
 
 ### Aggregation contract
 
-`buildMonthSeries(messages: TaggedRow[], senders: string[]): MonthSeries`
+`buildMonthSeries(messages: TaggedRow[]): MonthSeries`
 
-- Returns `[]` if `messages` is empty.
-- Otherwise: finds the min/max month present in `messages` (any row with a valid `date_utc`), and emits **every month in that range inclusive**, even months with zero messages (`total === 0`, `perSender === {}`).
+- Returns `[]` if no message in `messages` has a valid `date_utc`.
+- Otherwise: finds the min/max month present in `messages`, and emits **every month in that range inclusive**, even months with zero messages (`total === 0`, `perSender === {}`).
 - For each message with a non-null `date_utc`:
   - Computes `ym = date_utc.slice(0, 7)`.
-  - Increments `perSender[sender_display ?? 'Unknown']` and `total`.
-- Messages with `date_utc === null` are skipped (matches the existing `monthCounts` derivation in `+page.svelte`).
-- The `senders` argument is used only to seed deterministic key ordering for the per-sender breakdown in the tooltip; the function does not require every sender in `senders` to appear in `messages`.
+  - If the resulting string is not 7 chars long it is skipped.
+  - Increments `perSender[sender_display || 'Unknown']` and `total`.
+- The function does not take a `senders` argument; sender ordering is the caller's responsibility (the chart component derives an ordered sender list by appending any keys present in the series that aren't in the conversation-wide `senders` prop).
 
 ### Page wiring (`+page.svelte`)
 
 Replace the existing `monthCounts` derivation with a single derivation that feeds both the chart and the sidebar:
 
 ```ts
-const monthSeries = $derived.by(() => buildMonthSeries(messages, data.senders));
+const monthSeries = $derived.by(() => buildMonthSeries(messages));
 // Sidebar contract preserved: only months with ≥1 message appear in the Jump-to list.
 const monthCounts = $derived(
   monthSeries.filter(m => m.total > 0).map(m => ({ month: m.month, count: m.total }))
