@@ -37,3 +37,6 @@ workdir/
 # Logs
 *.log
 logs/
+
+# Superpowers brainstorming mockups (visual companion)
+.superpowers/
