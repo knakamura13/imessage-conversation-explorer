@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import type { MonthSeries } from '$lib/month-series.js';
 
   let {
@@ -47,8 +48,10 @@
   let hoveredIndex = $state<number | null>(null);
   let tooltipX = $state(0);
   let tooltipY = $state(0);
+  let tooltipFlipBelow = $state(false);
 
   let containerEl = $state<HTMLElement | null>(null);
+  let tooltipEl = $state<HTMLElement | null>(null);
 
   function colorFor(senderIdx: number): string {
     return `var(--chart-c${(senderIdx % 6) + 1})`;
@@ -69,9 +72,12 @@
     return `${formatMonth(bucket.month)}, ${bucket.total} messages (${parts.join(', ')}). Click to jump.`;
   }
 
-  function handleEnter(i: number, evt: MouseEvent | FocusEvent): void {
+  async function handleEnter(i: number, evt: MouseEvent | FocusEvent): Promise<void> {
     hoveredIndex = i;
     positionTooltipFromEvent(evt);
+    await tick();
+    clampTooltipX();
+    decideTooltipFlip();
   }
 
   function handleLeave(): void {
@@ -87,6 +93,38 @@
     // Center horizontally on the bar, anchor to its top.
     tooltipX = targetBox.left - containerBox.left + targetBox.width / 2;
     tooltipY = targetBox.top - containerBox.top;
+  }
+
+  // Tooltip width is data-dependent (white-space: nowrap), so measure each show.
+  function clampTooltipX(): void {
+    if (!tooltipEl || !containerEl) return;
+    const tWidth = tooltipEl.getBoundingClientRect().width;
+    if (tWidth === 0) return;
+    const cWidth = containerEl.getBoundingClientRect().width;
+    const halfW = tWidth / 2;
+    const minX = halfW + 4;
+    const maxX = cWidth - halfW - 4;
+    if (maxX <= minX) {
+      tooltipX = cWidth / 2;
+      return;
+    }
+    if (tooltipX < minX) tooltipX = minX;
+    else if (tooltipX > maxX) tooltipX = maxX;
+  }
+
+  // Tooltip is anchored above the bar by default; flip below when its top
+  // would render above the chart container (i.e. overlap the toggle row).
+  function decideTooltipFlip(): void {
+    if (!tooltipEl) {
+      tooltipFlipBelow = false;
+      return;
+    }
+    const tHeight = tooltipEl.getBoundingClientRect().height;
+    if (tHeight === 0) {
+      tooltipFlipBelow = false;
+      return;
+    }
+    tooltipFlipBelow = tooltipY - tHeight - 8 < 0;
   }
 
   // X-axis: first / middle / last month labels
@@ -186,6 +224,8 @@
       {@const b = series[hoveredIndex]}
       <div
         class="tooltip"
+        class:flip-below={tooltipFlipBelow}
+        bind:this={tooltipEl}
         style="left: {tooltipX}px; top: {tooltipY}px;"
         role="tooltip"
       >
@@ -281,6 +321,9 @@
     pointer-events: none;
     white-space: nowrap;
     z-index: 5;
+  }
+  .tooltip.flip-below {
+    transform: translate(-50%, 8px);
   }
 
   .t-month {
