@@ -473,7 +473,7 @@
 
   .app {
     display: grid;
-    grid-template-rows: auto 1fr auto;
+    grid-template-rows: auto auto 1fr auto;
     height: 100vh;
   }
   header {
@@ -595,6 +595,9 @@
   .empty {
     padding: 24px;
     color: var(--text-muted);
+  }
+  .empty {
+    grid-row: 2 / span 2;
   }
   .error {
     color: #ef4444;
